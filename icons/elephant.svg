@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="大象">
+  <title>大象</title>
+  <circle cx="32" cy="32" r="32" fill="#6E8FA8"/>
+  <circle cx="32" cy="32" r="31" fill="none" stroke="#FFF6EE" stroke-width="2"/>
+  <ellipse cx="11" cy="33" rx="12" ry="17" fill="#5A7A94"/>
+  <ellipse cx="53" cy="33" rx="12" ry="17" fill="#5A7A94"/>
+  <ellipse cx="13" cy="33" rx="6.5" ry="11" fill="#8AA8BC"/>
+  <ellipse cx="51" cy="33" rx="6.5" ry="11" fill="#8AA8BC"/>
+  <ellipse cx="23" cy="25.5" rx="3.3" ry="3.7" fill="#2C201C"/>
+  <ellipse cx="41" cy="25.5" rx="3.3" ry="3.7" fill="#2C201C"/>
+  <path d="M26 34.5 C28 32.5 30.5 32 32.5 32.2 C38.2 32.8 39 41 36.2 50 C35 54.2 29.8 55 28.6 50.6 C27.6 47 31.8 46.2 33 48.8 C33.4 49.6 33.2 51 32.4 52" fill="#5A7A94"/>
+  <path d="M32.2 36 C33.6 38.5 34.4 43 33.2 48.5" stroke="#8AA8BC" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+</svg>

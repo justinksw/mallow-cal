@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="樹熊">
+  <title>樹熊</title>
+  <circle cx="32" cy="32" r="32" fill="#A9A09A"/>
+  <circle cx="32" cy="32" r="31" fill="none" stroke="#FFF6EE" stroke-width="2"/>
+  <circle cx="12" cy="22" r="12" fill="#8E857E"/>
+  <circle cx="52" cy="22" r="12" fill="#8E857E"/>
+  <circle cx="12" cy="22" r="6.5" fill="#F3C0B4"/>
+  <circle cx="52" cy="22" r="6.5" fill="#F3C0B4"/>
+  <ellipse cx="32" cy="38" rx="18" ry="17" fill="#FFF4E8"/>
+  <ellipse cx="23.5" cy="34" rx="3" ry="3.4" fill="#2C201C"/>
+  <ellipse cx="40.5" cy="34" rx="3" ry="3.4" fill="#2C201C"/>
+  <ellipse cx="32" cy="44" rx="7" ry="6" fill="#3A2A26"/>
+
+</svg>
