@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="貓">
+  <title>貓</title>
+  <circle cx="32" cy="32" r="32" fill="#E06E6A"/>
+  <circle cx="32" cy="32" r="31" fill="none" stroke="#FFF6EE" stroke-width="2"/>
+  <path d="M8 28 L18 8 L28 24 Z" fill="#C85A58"/>
+  <path d="M56 28 L46 8 L36 24 Z" fill="#C85A58"/>
+  <path d="M14 24 L19 13 L26 23 Z" fill="#F3C0B4"/>
+  <path d="M50 24 L45 13 L38 23 Z" fill="#F3C0B4"/>
+  <ellipse cx="32" cy="42" rx="17" ry="14" fill="#FFF4E8"/>
+  <ellipse cx="23.5" cy="33" rx="3.4" ry="3.6" fill="#2C201C"/>
+  <ellipse cx="40.5" cy="33" rx="3.4" ry="3.6" fill="#2C201C"/>
+  <path d="M32 39.5 L29.4 43.2 H34.6 Z" fill="#E87880"/>
+  <path d="M32 43 Q28.5 47 25 46" stroke="#3A2A26" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  <path d="M32 43 Q35.5 47 39 46" stroke="#3A2A26" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+
+</svg>

@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>日曆</title>
+  <style>
+    :root {
+      --ink: #6B3D8C;
+      --ink-soft: #6B4A88;
+      --sunday: #9A3E70;
+      --busy: #FFE6D8;
+      --busy-edge: #E8BCAE;
+      --free: #D9E8F8;
+      --free-badge: #ECF2FA;
+      --free-ink: #2A4468;
+      --free-edge: #4A70A0;
+      --dim: #E8D6E0;
+      --dim-ink: #6B3D8C;
+      --bar-gordon: rgba(220, 106, 36, 0.55);
+      --bar-wu: rgba(53, 84, 122, 0.55);
+      --bar-nicol: rgba(212, 154, 18, 0.50);
+      --veil-top: rgba(255, 250, 252, 0.34);
+      --veil-mid: rgba(248, 240, 255, 0.22);
+      --veil-bot: rgba(232, 242, 255, 0.28);
+      --veil-line: rgba(255, 255, 255, 0.62);
+      --pad-x: 16px;
+      --gap: 5px;
+      --band-h: 16px;
+      --lane-h: 24px;
+      --lane-gap: 3px;
+      --cell-pad-top: 4px;
+      --num-size: 13px;
+      --num-lh: calc(var(--num-size) * 1.2);
+      --track-top: 3px;
+      --lane-1-top: calc(var(--cell-pad-top) + var(--num-lh) + var(--track-top));
+      --lane-2-top: calc(var(--lane-1-top) + var(--lane-h) + var(--lane-gap));
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "PingFang TC", "Noto Sans CJK TC", "Noto Sans TC", "Source Han Sans TC", sans-serif;
+      font-size: 16px;
+      line-height: 1.45;
+      background-color: #EEDAF4;
+      background-image: linear-gradient(135deg, #fbe4f3 0%, #f4def0 28%, #ece0f8 52%, #dce4fb 78%, #cfe0fd 100%);
+      min-height: 100dvh;
+      position: relative;
+    }
+
+    ::selection {
+      background: #E8C4F0;
+      color: var(--ink);
+    }
+
+    .sky {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(54px);
+      opacity: 0.92;
+    }
+    .orb-a { width: 460px; height: 460px; left: -160px; top: -100px; background: #FFD0EE; }
+    .orb-b { width: 400px; height: 400px; right: -130px; top: -20px; background: #B8ECFF; }
+    .orb-c { width: 360px; height: 320px; left: -40px; top: 24%; background: #FFCDB6; }
+    .orb-d { width: 380px; height: 380px; right: -90px; top: 38%; background: #D2CCFF; }
+    .orb-e { width: 320px; height: 320px; left: -90px; top: 56%; background: #E4B8FF; }
+    .orb-f { width: 440px; height: 400px; right: -110px; bottom: -60px; background: #A8DCFF; }
+    .orb-g { width: 300px; height: 300px; left: 16%; bottom: 4%; background: #FFC6EC; }
+
+    .grain {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.055;
+      mix-blend-mode: multiply;
+    }
+
+    .speck {
+      position: absolute;
+      opacity: 0.28;
+      color: #FFF6FB;
+    }
+    .speck-a { width: 12px; height: 12px; top: 7%; right: 14%; }
+    .speck-b { width: 9px; height: 9px; top: 38%; left: 8%; }
+    .speck-c { width: 11px; height: 11px; top: 62%; right: 10%; }
+    .speck-d { width: 8px; height: 8px; bottom: 12%; left: 16%; }
+    .speck-e { width: 7px; height: 7px; top: 18%; left: 22%; }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      padding: max(28px, env(safe-area-inset-top)) var(--pad-x) max(56px, env(safe-area-inset-bottom));
+    }
+
+    @media (min-width: 720px) {
+      .page {
+        max-width: 480px;
+        padding-top: 48px;
+      }
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .legend {
+      margin: 0 0 20px;
+    }
+
+    .legend-toggle {
+      appearance: none;
+      -webkit-appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 14px;
+      margin: 0 0 4px;
+      border: 1px solid var(--veil-line);
+      border-radius: 999px;
+      background: linear-gradient(165deg, var(--veil-top), var(--veil-bot));
+      backdrop-filter: blur(16px) saturate(1.18);
+      -webkit-backdrop-filter: blur(16px) saturate(1.18);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      color: var(--ink);
+      font: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .legend-toggle:focus-visible,
+    .bar:focus-visible,
+    .mark:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+
+    .legend-toggle svg {
+      width: 12px;
+      height: 12px;
+      flex: 0 0 12px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .legend-toggle[aria-expanded="false"] svg {
+      transform: rotate(-90deg);
+    }
+
+    .legend ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+      list-style: none;
+      margin: 8px 0 0;
+      padding: 0;
+    }
+
+    .legend[data-open="false"] ul {
+      display: none;
+    }
+
+    .legend li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      font-size: 16px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .legend li img {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 40px;
+    }
+
+    .month {
+      background: linear-gradient(165deg, var(--veil-top) 0%, var(--veil-mid) 52%, var(--veil-bot) 100%);
+      backdrop-filter: blur(22px) saturate(1.18);
+      -webkit-backdrop-filter: blur(22px) saturate(1.18);
+      border: 1px solid var(--veil-line);
+      border-radius: 32px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        0 10px 36px rgba(180, 140, 210, 0.10);
+      padding: 18px 10px 14px;
+      margin: 0 0 18px;
+      overflow: hidden;
+    }
+
+    .month h2 {
+      margin: 0 0 12px;
+      text-align: center;
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+      color: var(--ink);
+    }
+
+    .dow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .dow .sun { color: var(--sunday); }
+
+    .week {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: var(--gap);
+      position: relative;
+      margin-bottom: var(--gap);
+    }
+
+    .week:last-child {
+      margin-bottom: 0;
+    }
+
+    .cell {
+      min-width: 0;
+      min-height: 68px;
+      padding: var(--cell-pad-top) 1px 5px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cell.empty {
+      background: transparent;
+      min-height: 0;
+      padding: 0;
+    }
+
+    .cell.busy {
+      background: var(--busy);
+      box-shadow: inset 0 0 0 1px var(--busy-edge);
+    }
+
+    .cell.free {
+      background: var(--free);
+      box-shadow: inset 0 0 0 1px var(--free-edge);
+    }
+
+    .cell.dim {
+      background: var(--dim);
+    }
+
+    .cell .num {
+      display: block;
+      font-size: var(--num-size);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      position: relative;
+      z-index: 3;
+    }
+
+    .cell.free .num { color: var(--free-ink); }
+    .cell.dim .num { color: var(--dim-ink); }
+
+    .free-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: auto;
+      margin-bottom: 2px;
+      min-width: 22px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: var(--free-badge);
+      color: var(--free-ink);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      box-shadow: inset 0 0 0 1px var(--free-edge);
+    }
+
+    .tracks {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: var(--lane-gap);
+      width: 100%;
+      margin-top: var(--track-top);
+      flex: 1 1 auto;
+    }
+
+    .lane-spacer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: var(--lane-h);
+      width: 100%;
+      pointer-events: none;
+    }
+    .lane-spacer .mark { pointer-events: auto; }
+
+    .span-layer {
+      position: absolute;
+      inset: 0;
+      grid-column: 1 / -1;
+      grid-row: 1;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-rows: 1fr;
+      gap: var(--gap);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .bar {
+      appearance: none;
+      -webkit-appearance: none;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      align-self: start;
+      grid-row: 1;
+      position: relative;
+      width: auto;
+      min-width: 0;
+      min-height: var(--lane-h);
+      height: var(--lane-h);
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      color: inherit;
+      font: inherit;
+      touch-action: manipulation;
+      pointer-events: auto;
+    }
+
+    .bar.lane-1 { margin-top: var(--lane-1-top); }
+    .bar.lane-2 { margin-top: var(--lane-2-top); }
+
+    .bar.start { padding-left: 2px; }
+    .bar.end { padding-right: 2px; }
+
+    .bar .band {
+      display: flex;
+      align-items: center;
+      position: relative;
+      width: 100%;
+      height: var(--band-h);
+      min-height: var(--band-h);
+      background: var(--bar-fill);
+    }
+
+    .bar:hover .band,
+    .mark:hover img {
+      filter: brightness(1.06);
+    }
+
+    .bar.gordon { --bar-fill: var(--bar-gordon); }
+    .bar.wu     { --bar-fill: var(--bar-wu); }
+    .bar.nicol  { --bar-fill: var(--bar-nicol); }
+
+    .bar.start .band {
+      border-radius: 999px 0 0 999px;
+    }
+    .bar.end .band {
+      border-radius: 0 999px 999px 0;
+    }
+    .bar.start.end .band {
+      border-radius: 999px;
+    }
+    .bar.wrap-start .band,
+    .bar.cont-start .band {
+      border-radius: 3px 0 0 3px;
+    }
+    .bar.wrap-end .band,
+    .bar.cont-end .band {
+      border-radius: 0 3px 3px 0;
+    }
+    .bar.wrap-start.end .band,
+    .bar.cont-start.end .band {
+      border-radius: 3px 999px 999px 3px;
+    }
+    .bar.start.wrap-end .band,
+    .bar.start.cont-end .band {
+      border-radius: 999px 3px 3px 999px;
+    }
+
+    .bar img {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      display: block;
+      margin-left: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .bar .cont {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-inline: 3px;
+      pointer-events: none;
+    }
+
+    .bar .cont i {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #FFF6EE;
+      box-shadow: 0 0 0 0.5px rgba(44, 32, 28, 0.25);
+      display: block;
+    }
+
+    .bar.cont-end .cont { margin-left: auto; margin-right: 4px; }
+    .bar.cont-start .cont { margin-right: 0; margin-left: 3px; }
+
+    .faces {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      align-items: center;
+      gap: 1px;
+      width: 100%;
+      margin-top: auto;
+      line-height: 0;
+      min-height: var(--lane-h);
+      position: relative;
+      z-index: 3;
+    }
+
+    .mark {
+      appearance: none;
+      -webkit-appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex: 0 0 auto;
+      width: clamp(16px, 4.8vw, 20px);
+      height: 24px;
+      min-width: 0;
+      min-height: 24px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 50%;
+      touch-action: manipulation;
+    }
+
+    .mark::before {
+      content: "";
+      position: absolute;
+      inset: 0 -3px;
+    }
+
+    .mark img {
+      width: clamp(16px, 4.8vw, 20px);
+      height: clamp(16px, 4.8vw, 20px);
+      display: block;
+      position: relative;
+    }
+
+    #name-pop {
+      position: fixed;
+      z-index: 20;
+      min-height: 32px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--veil-line);
+      background: rgba(255, 250, 252, 0.94);
+      backdrop-filter: blur(16px) saturate(1.18);
+      -webkit-backdrop-filter: blur(16px) saturate(1.18);
+      box-shadow: 0 6px 18px rgba(107, 61, 140, 0.16);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+      white-space: nowrap;
+      pointer-events: none;
+      transform-origin: 50% 100%;
+    }
+
+    #name-pop::after {
+      content: "";
+      position: absolute;
+      left: var(--caret-x, 50%);
+      width: 8px;
+      height: 8px;
+      background: rgba(255, 250, 252, 0.94);
+      border-right: 1px solid var(--veil-line);
+      border-bottom: 1px solid var(--veil-line);
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    #name-pop[data-place="above"]::after { bottom: -4px; }
+    #name-pop[data-place="below"]::after {
+      top: -4px;
+      border: 0;
+      border-left: 1px solid var(--veil-line);
+      border-top: 1px solid var(--veil-line);
+    }
+
+    #name-pop[hidden] { display: none; }
+
+    #name-pop.is-open {
+      animation: pop-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(4px) scale(0.96); filter: blur(2px); }
+      to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    @media (min-width: 360px) {
+      :root { --num-size: 14px; }
+    }
+
+    @media (min-width: 390px) {
+      .month { padding-left: 12px; padding-right: 12px; }
+      .cell { min-height: 72px; }
+    }
+
+    @media (max-width: 359px) {
+      :root { --pad-x: 12px; --cell-pad-top: 3px; }
+      .month { padding-left: 8px; padding-right: 8px; border-radius: 28px; }
+      .cell { min-height: 66px; }
+    }
+
+    @media (min-width: 720px) and (orientation: landscape) {
+      .page { max-width: 480px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #name-pop.is-open { animation: none; }
+      .legend-toggle svg { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+    <span class="orb orb-d"></span>
+    <span class="orb orb-e"></span>
+    <span class="orb orb-f"></span>
+    <span class="orb orb-g"></span>
+    <svg class="grain" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <filter id="grain">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
+      </filter>
+      <rect width="100%" height="100%" filter="url(#grain)"/>
+    </svg>
+    <svg class="speck speck-a" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2c.4 2.2 1.6 4 3.6 5.2-2 .8-3.2 2.6-3.6 5.2-.4-2.6-1.6-4.4-3.6-5.2 2-1.2 3.2-3 3.6-5.2z"/></svg>
+    <svg class="speck speck-b" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.8 13.2 9.2 17.8 10.2 13.8 13.4 14.6 18 12 15.6 9.4 18 10.2 13.4 6.2 10.2 10.8 9.2z"/></svg>
+    <svg class="speck speck-c" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5c.35 1.7 1.3 3.1 2.9 4-1.6.7-2.55 2.1-2.9 4-.35-1.9-1.3-3.3-2.9-4 1.6-.9 2.55-2.3 2.9-4z"/></svg>
+    <svg class="speck speck-d" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.8 13.2 9.2 17.8 10.2 13.8 13.4 14.6 18 12 15.6 9.4 18 10.2 13.4 6.2 10.2 10.8 9.2z"/></svg>
+    <svg class="speck speck-e" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5c.35 1.7 1.3 3.1 2.9 4-1.6.7-2.55 2.1-2.9 4-.35-1.9-1.3-3.3-2.9-4 1.6-.9 2.55-2.3 2.9-4z"/></svg>
+  </div>
+
+  <div class="page">
+    <h1 class="visually-hidden">日曆</h1>
+
+    <section class="legend" aria-label="圖例" data-open="true">
+      <button type="button" class="legend-toggle" id="legend-toggle" aria-expanded="true" aria-controls="legend-list">
+        圖例
+        <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.2 L6 8 L10 4.2"/></svg>
+      </button>
+      <ul id="legend-list">
+        <li><img src="icons-v5/fox.svg" alt="狐狸" width="40" height="40"><span>Gordon</span></li>
+        <li><img src="icons-v5/bunny.svg" alt="兔子" width="40" height="40"><span>Winnie Wong</span></li>
+        <li><img src="icons-v5/penguin.svg" alt="企鵝" width="40" height="40"><span>Winnie Wu</span></li>
+        <li><img src="icons-v5/chick.svg" alt="雞仔" width="40" height="40"><span>Kami</span></li>
+        <li><img src="icons-v5/tiger.svg" alt="老虎" width="40" height="40"><span>Nicol</span></li>
+      </ul>
+    </section>
+
+    <section class="month" aria-labelledby="m-2026-12">
+      <h2 id="m-2026-12">2026年12月</h2>
+      <div class="dow" aria-hidden="true"><span class="sun">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+
+      <div class="week">
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell dim" data-date="2026-12-01" aria-label="1日"><span class="num">1</span></div>
+        <div class="cell dim" data-date="2026-12-02" aria-label="2日"><span class="num">2</span></div>
+        <div class="cell dim" data-date="2026-12-03" aria-label="3日"><span class="num">3</span></div>
+        <div class="cell dim" data-date="2026-12-04" aria-label="4日"><span class="num">4</span></div>
+        <div class="cell busy" data-date="2026-12-05" aria-label="5日，Winnie Wong">
+          <span class="num">5</span>
+          <span class="faces"><button type="button" class="mark" data-who="Winnie Wong" data-mark="2026-12-05-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button></span>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell free" data-date="2026-12-06" aria-label="6日，空"><span class="num">6</span><span class="free-badge">空</span></div>
+        <div class="cell dim" data-date="2026-12-07" aria-label="7日"><span class="num">7</span></div>
+        <div class="cell dim" data-date="2026-12-08" aria-label="8日"><span class="num">8</span></div>
+        <div class="cell dim" data-date="2026-12-09" aria-label="9日"><span class="num">9</span></div>
+        <div class="cell dim" data-date="2026-12-10" aria-label="10日"><span class="num">10</span></div>
+        <div class="cell dim" data-date="2026-12-11" aria-label="11日"><span class="num">11</span></div>
+        <div class="cell busy" data-date="2026-12-12" aria-label="12日，Winnie Wong">
+          <span class="num">12</span>
+          <span class="faces"><button type="button" class="mark" data-who="Winnie Wong" data-mark="2026-12-12-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button></span>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell free" data-date="2026-12-13" aria-label="13日，空"><span class="num">13</span><span class="free-badge">空</span></div>
+        <div class="cell dim" data-date="2026-12-14" aria-label="14日，Winnie Wu">
+          <span class="num">14</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2026-12-15" aria-label="15日，Winnie Wu">
+          <span class="num">15</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2026-12-16" aria-label="16日，Winnie Wu">
+          <span class="num">16</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2026-12-17" aria-label="17日，Winnie Wu">
+          <span class="num">17</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2026-12-18" aria-label="18日，Winnie Wu">
+          <span class="num">18</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell busy" data-date="2026-12-19" aria-label="19日，Winnie Wong、Winnie Wu">
+          <span class="num">19</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+          <span class="faces"><button type="button" class="mark" data-who="Winnie Wong" data-mark="2026-12-19-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button></span>
+        </div>
+        <div class="span-layer">
+          <button type="button" class="bar wu start wrap-end lane-1" style="grid-column: 2 / 8" data-who="Winnie Wu" data-mark="2026-12-14-wu" aria-label="Winnie Wu"><span class="band"><img src="icons-v5/penguin.svg" alt="" width="16" height="16"></span></button>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell busy" data-date="2026-12-20" aria-label="20日，Winnie Wu、Nicol">
+          <span class="num">20</span>
+          <div class="tracks">
+            <span class="lane-spacer" aria-hidden="true"></span>
+            <span class="lane-spacer" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="cell dim" data-date="2026-12-21" aria-label="21日，Nicol">
+          <span class="num">21</span>
+          <div class="tracks">
+            <span class="lane-spacer" aria-hidden="true"></span>
+            <span class="lane-spacer" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="cell dim" data-date="2026-12-22" aria-label="22日，Nicol">
+          <span class="num">22</span>
+          <div class="tracks">
+            <span class="lane-spacer" aria-hidden="true"></span>
+            <span class="lane-spacer" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="cell dim" data-date="2026-12-23" aria-label="23日，Nicol">
+          <span class="num">23</span>
+          <div class="tracks">
+            <span class="lane-spacer" aria-hidden="true"></span>
+            <span class="lane-spacer" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="cell dim" data-date="2026-12-24" aria-label="24日，Nicol">
+          <span class="num">24</span>
+          <div class="tracks">
+            <span class="lane-spacer" aria-hidden="true"></span>
+            <span class="lane-spacer" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="cell busy" data-date="2026-12-25" aria-label="25日，Nicol">
+          <span class="num">25</span>
+          <div class="tracks">
+            <span class="lane-spacer" aria-hidden="true"></span>
+            <span class="lane-spacer" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="cell busy" data-date="2026-12-26" aria-label="26日，Winnie Wong、Nicol">
+          <span class="num">26</span>
+          <div class="tracks">
+            <span class="lane-spacer"><button type="button" class="mark" data-who="Winnie Wong" data-mark="2026-12-26-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button></span>
+            <span class="lane-spacer" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="span-layer">
+          <button type="button" class="bar wu wrap-start end lane-1" style="grid-column: 1 / 2" data-who="Winnie Wu" data-mark="2026-12-20-wu" aria-label="Winnie Wu"><span class="band"></span></button>
+          <button type="button" class="bar nicol start wrap-end lane-2" style="grid-column: 1 / 8" data-who="Nicol" data-mark="2026-12-20-nicol" aria-label="Nicol"><span class="band"><img src="icons-v5/tiger.svg" alt="" width="16" height="16"></span></button>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell busy" data-date="2026-12-27" aria-label="27日，Gordon、Nicol">
+          <span class="num">27</span>
+          <div class="tracks">
+            <span class="lane-spacer" aria-hidden="true"></span>
+            <span class="lane-spacer" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="cell dim" data-date="2026-12-28" aria-label="28日，Gordon">
+          <span class="num">28</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2026-12-29" aria-label="29日，Gordon">
+          <span class="num">29</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2026-12-30" aria-label="30日，Gordon">
+          <span class="num">30</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2026-12-31" aria-label="31日，Gordon">
+          <span class="num">31</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="span-layer">
+          <button type="button" class="bar gordon start cont-end lane-1" style="grid-column: 1 / 6" data-who="Gordon" data-mark="2026-12-27-gordon" aria-label="Gordon"><span class="band"><img src="icons-v5/fox.svg" alt="" width="16" height="16"><span class="cont" aria-hidden="true"><i></i><i></i></span></span></button>
+          <button type="button" class="bar nicol wrap-start end lane-2" style="grid-column: 1 / 2" data-who="Nicol" data-mark="2026-12-27-nicol" aria-label="Nicol"><span class="band"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="month" aria-labelledby="m-2027-01">
+      <h2 id="m-2027-01">2027年1月</h2>
+      <div class="dow" aria-hidden="true"><span class="sun">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+
+      <div class="week">
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell busy" data-date="2027-01-01" aria-label="1日，Gordon">
+          <span class="num">1</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell busy" data-date="2027-01-02" aria-label="2日，Gordon、Winnie Wong、Kami">
+          <span class="num">2</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+          <span class="faces">
+            <button type="button" class="mark" data-who="Winnie Wong" data-mark="2027-01-02-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button>
+            <button type="button" class="mark" data-who="Kami" data-mark="2027-01-02-kami" aria-label="Kami"><img src="icons-v5/chick.svg" alt="" width="20" height="20"></button>
+          </span>
+        </div>
+        <div class="span-layer">
+          <button type="button" class="bar gordon cont-start wrap-end lane-1" style="grid-column: 6 / 8" data-who="Gordon" data-mark="2027-01-01-gordon" aria-label="Gordon"><span class="band"><span class="cont" aria-hidden="true"><i></i><i></i></span><img src="icons-v5/fox.svg" alt="" width="16" height="16"></span></button>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell busy" data-date="2027-01-03" aria-label="3日，Gordon">
+          <span class="num">3</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2027-01-04" aria-label="4日，Gordon">
+          <span class="num">4</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2027-01-05" aria-label="5日，Gordon">
+          <span class="num">5</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2027-01-06" aria-label="6日，Gordon">
+          <span class="num">6</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2027-01-07" aria-label="7日，Gordon">
+          <span class="num">7</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell dim" data-date="2027-01-08" aria-label="8日，Gordon">
+          <span class="num">8</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+        </div>
+        <div class="cell busy" data-date="2027-01-09" aria-label="9日，Gordon、Winnie Wong">
+          <span class="num">9</span>
+          <div class="tracks"><span class="lane-spacer" aria-hidden="true"></span></div>
+          <span class="faces"><button type="button" class="mark" data-who="Winnie Wong" data-mark="2027-01-09-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button></span>
+        </div>
+        <div class="span-layer">
+          <button type="button" class="bar gordon wrap-start end lane-1" style="grid-column: 1 / 8" data-who="Gordon" data-mark="2027-01-03-gordon" aria-label="Gordon"><span class="band"></span></button>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell free" data-date="2027-01-10" aria-label="10日，空"><span class="num">10</span><span class="free-badge">空</span></div>
+        <div class="cell dim" data-date="2027-01-11" aria-label="11日"><span class="num">11</span></div>
+        <div class="cell dim" data-date="2027-01-12" aria-label="12日"><span class="num">12</span></div>
+        <div class="cell dim" data-date="2027-01-13" aria-label="13日"><span class="num">13</span></div>
+        <div class="cell dim" data-date="2027-01-14" aria-label="14日"><span class="num">14</span></div>
+        <div class="cell dim" data-date="2027-01-15" aria-label="15日"><span class="num">15</span></div>
+        <div class="cell busy" data-date="2027-01-16" aria-label="16日，Winnie Wong">
+          <span class="num">16</span>
+          <span class="faces"><button type="button" class="mark" data-who="Winnie Wong" data-mark="2027-01-16-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button></span>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell free" data-date="2027-01-17" aria-label="17日，空"><span class="num">17</span><span class="free-badge">空</span></div>
+        <div class="cell dim" data-date="2027-01-18" aria-label="18日"><span class="num">18</span></div>
+        <div class="cell dim" data-date="2027-01-19" aria-label="19日"><span class="num">19</span></div>
+        <div class="cell dim" data-date="2027-01-20" aria-label="20日"><span class="num">20</span></div>
+        <div class="cell dim" data-date="2027-01-21" aria-label="21日"><span class="num">21</span></div>
+        <div class="cell dim" data-date="2027-01-22" aria-label="22日"><span class="num">22</span></div>
+        <div class="cell busy" data-date="2027-01-23" aria-label="23日，Winnie Wong">
+          <span class="num">23</span>
+          <span class="faces"><button type="button" class="mark" data-who="Winnie Wong" data-mark="2027-01-23-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button></span>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell free" data-date="2027-01-24" aria-label="24日，空"><span class="num">24</span><span class="free-badge">空</span></div>
+        <div class="cell dim" data-date="2027-01-25" aria-label="25日"><span class="num">25</span></div>
+        <div class="cell dim" data-date="2027-01-26" aria-label="26日"><span class="num">26</span></div>
+        <div class="cell dim" data-date="2027-01-27" aria-label="27日"><span class="num">27</span></div>
+        <div class="cell dim" data-date="2027-01-28" aria-label="28日"><span class="num">28</span></div>
+        <div class="cell dim" data-date="2027-01-29" aria-label="29日"><span class="num">29</span></div>
+        <div class="cell busy" data-date="2027-01-30" aria-label="30日，Winnie Wong">
+          <span class="num">30</span>
+          <span class="faces"><button type="button" class="mark" data-who="Winnie Wong" data-mark="2027-01-30-wong" aria-label="Winnie Wong"><img src="icons-v5/bunny.svg" alt="" width="20" height="20"></button></span>
+        </div>
+      </div>
+
+      <div class="week">
+        <div class="cell free" data-date="2027-01-31" aria-label="31日，空"><span class="num">31</span><span class="free-badge">空</span></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+        <div class="cell empty" aria-hidden="true"></div>
+      </div>
+    </section>
+  </div>
+
+  <div id="name-pop" hidden role="tooltip"></div>
+
+  <script>
+    (function () {
+      var toggle = document.getElementById("legend-toggle");
+      var legend = document.querySelector(".legend");
+      var pop = document.getElementById("name-pop");
+      var openMark = null;
+
+      function setLegend(open) {
+        legend.dataset.open = open ? "true" : "false";
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+
+      toggle.addEventListener("click", function () {
+        setLegend(legend.dataset.open !== "true");
+      });
+
+      function hidePop() {
+        pop.hidden = true;
+        pop.classList.remove("is-open");
+        pop.textContent = "";
+        if (openMark) {
+          openMark.removeAttribute("aria-describedby");
+          openMark = null;
+        }
+      }
+
+      function anchorRect(el, ev) {
+        var r = el.getBoundingClientRect();
+        if (el.classList.contains("bar")) {
+          var img = el.querySelector("img");
+          if (ev && ev.clientX != null) {
+            return { left: ev.clientX - 8, width: 16, top: r.top, bottom: r.bottom, height: r.height };
+          }
+          if (img) return img.getBoundingClientRect();
+          return { left: r.left, width: Math.min(24, r.width), top: r.top, bottom: r.bottom, height: r.height };
+        }
+        return r;
+      }
+
+      function cellFor(el, r) {
+        var cell = el.closest(".cell");
+        if (cell) return cell;
+        var week = el.closest(".week");
+        if (!week) return null;
+        var cx = r.left + r.width / 2;
+        return Array.prototype.find.call(week.querySelectorAll(".cell"), function (c) {
+          var cr = c.getBoundingClientRect();
+          return cx >= cr.left && cx <= cr.right;
+        }) || null;
+      }
+
+      function placePop(el, ev) {
+        var name = el.getAttribute("data-who");
+        pop.textContent = name;
+        pop.hidden = false;
+        pop.classList.remove("is-open");
+        void pop.offsetWidth;
+        pop.classList.add("is-open");
+        if (openMark) openMark.removeAttribute("aria-describedby");
+        el.setAttribute("aria-describedby", "name-pop");
+        openMark = el;
+        var r = anchorRect(el, ev);
+        var w = pop.offsetWidth;
+        var h = pop.offsetHeight;
+        var cell = cellFor(el, r);
+        var cellTop = cell ? cell.getBoundingClientRect().top : 0;
+        var place = "above";
+        var top = r.top - h - 10;
+        if (top < 8 || (cell && top < cellTop + 22)) {
+          place = "below";
+          top = r.bottom + 10;
+        }
+        var left = r.left + r.width / 2 - w / 2;
+        if (left < 8) left = 8;
+        if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+        var caret = r.left + r.width / 2 - left;
+        caret = Math.max(12, Math.min(w - 12, caret));
+        pop.dataset.place = place;
+        pop.style.setProperty("--caret-x", Math.round(caret) + "px");
+        pop.style.left = Math.round(left) + "px";
+        pop.style.top = Math.round(top) + "px";
+      }
+
+      document.addEventListener("click", function (ev) {
+        var mark = ev.target.closest(".bar, .mark");
+        if (mark) {
+          ev.preventDefault();
+          placePop(mark, ev);
+          return;
+        }
+        if (!ev.target.closest("#name-pop")) hidePop();
+      });
+
+      document.addEventListener("keydown", function (ev) {
+        if (ev.key === "Escape") hidePop();
+      });
+
+      window.addEventListener("resize", function () {
+        if (openMark && !pop.hidden) placePop(openMark);
+      });
+      window.addEventListener("scroll", function () {
+        if (openMark && !pop.hidden) placePop(openMark);
+      }, { passive: true });
+
+      var params = new URLSearchParams(location.search);
+      if (params.get("legend") === "off") setLegend(false);
+      var popTarget = params.get("pop");
+      if (popTarget) {
+        var el = document.querySelector('[data-mark="' + CSS.escape(popTarget) + '"]');
+        if (el) {
+          el.scrollIntoView({ block: "center", inline: "nearest" });
+          placePop(el);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
