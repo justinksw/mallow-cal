@@ -204,13 +204,13 @@
 
   function renderCalendar(root, schedule) {
     root.innerHTML = '';
-    var legendSection = el('section', { class: 'legend', 'aria-label': '圖例', 'data-open': 'true' });
+    var legendSection = el('section', { class: 'legend', 'aria-label': '圖例', 'data-open': 'false' });
     legendSection.appendChild(
       el('button', {
         type: 'button',
         class: 'legend-toggle',
         id: 'legend-toggle',
-        'aria-expanded': 'true',
+        'aria-expanded': 'false',
         'aria-controls': 'legend-list',
       }, [
         document.createTextNode('圖例 '),
@@ -341,7 +341,8 @@
     );
 
     var params = new URLSearchParams(location.search);
-    if (params.get('legend') === 'off') setLegend(false);
+    if (params.get('legend') === 'on') setLegend(true);
+    else if (params.get('legend') === 'off') setLegend(false);
     var popTarget = params.get('pop');
     if (popTarget) {
       var targetEl = document.querySelector('[data-mark="' + CSS.escape(popTarget) + '"]');
