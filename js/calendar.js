@@ -204,6 +204,9 @@
 
   function renderCalendar(root, schedule) {
     root.innerHTML = '';
+    var mount = document.getElementById('legend-mount');
+    if (mount) mount.innerHTML = '';
+
     var legendSection = el('section', { class: 'legend', 'aria-label': '圖例', 'data-open': 'false' });
     legendSection.appendChild(
       el('button', {
@@ -226,7 +229,10 @@
       ])
     );
     legendSection.appendChild(renderLegend(schedule));
-    root.appendChild(legendSection);
+    if (mount) mount.appendChild(legendSection);
+    else root.appendChild(legendSection);
+
+    root.appendChild(el('div', { className: 'legend-flow-spacer', 'aria-hidden': 'true' }));
 
     Core.MONTHS.forEach(function (m) {
       root.appendChild(renderMonth(m, schedule, schedule.ranges));
