@@ -632,34 +632,9 @@
       .legend-toggle svg { transition: none; }
     }
 
-    .preview-banner {
-      position: fixed;
-      top: max(10px, env(safe-area-inset-top));
-      right: max(10px, env(safe-area-inset-right));
-      z-index: 30;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 32px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--veil-line);
-      background: rgba(255, 250, 252, 0.92);
-      backdrop-filter: blur(14px) saturate(1.15);
-      -webkit-backdrop-filter: blur(14px) saturate(1.15);
-      box-shadow: 0 4px 14px rgba(107, 61, 140, 0.14);
-      color: var(--ink);
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      line-height: 1;
-      pointer-events: none;
-    }
   </style>
 </head>
 <body>
-  <div class="preview-banner" aria-label="預覽版本">PREVIEW</div>
   <div class="sky" aria-hidden="true">
     <span class="orb orb-a"></span>
     <span class="orb orb-b"></span>
